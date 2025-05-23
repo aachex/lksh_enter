@@ -106,8 +106,10 @@ loop:
 	}
 	res.Body.Close()
 
+	teamId = make(map[string]int)
 	for _, t := range teams {
 		teamId[t.Name] = t.Id
+		fmt.Println(t.Name, t.Id)
 	}
 
 	var s string
@@ -120,24 +122,12 @@ loop:
 	}
 }
 
-func getRequest(url string) *http.Request {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Authorization", os.Getenv("API_TOKEN"))
-	return req
-}
-
 func getStats() {
 	var teamName string
 	fmt.Scan(&teamName)
 	id := teamId[teamName]
 
-	req, err := http.NewRequest(http.MethodGet, os.Getenv("API_HOST")+"/matches", nil)
-	if err != nil {
-		panic(err)
-	}
+	req := getRequest(os.Getenv("API_HOST") + "/matches")
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -153,6 +143,7 @@ func getStats() {
 	var matches []match
 	err = json.Unmarshal(b, &matches)
 	if err != nil {
+		fmt.Println(string(b))
 		panic(err)
 	}
 
@@ -181,4 +172,13 @@ func getStats() {
 	}
 
 	fmt.Println(wins, defeats, scored-missed)
+}
+
+func getRequest(url string) *http.Request {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Authorization", os.Getenv("API_TOKEN"))
+	return req
 }
