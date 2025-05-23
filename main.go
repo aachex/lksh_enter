@@ -58,7 +58,7 @@ loop:
 		switch res.StatusCode {
 		case http.StatusTooManyRequests:
 			res.Body.Close()
-			time.Sleep(time.Minute)
+			time.Sleep(time.Minute) // слишком много запросов - временно прерываем цикл (ну почему нет эндпоинта на получение всех игроков?)
 			continue
 		case http.StatusNotFound:
 			break loop
