@@ -50,11 +50,7 @@ func main() {
 
 loop:
 	for {
-		req, err := http.NewRequest(http.MethodGet, os.Getenv("API_HOST")+fmt.Sprintf("/players/%d", id), nil)
-		if err != nil {
-			panic(err)
-		}
-		req.Header.Set("Authorization", os.Getenv("API_TOKEN"))
+		req := getRequest(os.Getenv("API_HOST") + fmt.Sprintf("/players/%d", id))
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -82,7 +78,6 @@ loop:
 		players = append(players, p)
 		playerNames = append(playerNames, p.Name+" "+p.Surname)
 
-		fmt.Println(id)
 		res.Body.Close()
 		id++
 	}
@@ -90,6 +85,29 @@ loop:
 	slices.Sort(playerNames)
 	for _, n := range playerNames {
 		fmt.Println(n)
+	}
+
+	// fetch teams
+	req := getRequest(os.Getenv("API_HOST") + "/teams")
+	res, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	var teams []team
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(b, &teams)
+	if err != nil {
+		panic(err)
+	}
+	res.Body.Close()
+
+	for _, t := range teams {
+		teamId[t.Name] = t.Id
 	}
 
 	var s string
@@ -102,9 +120,19 @@ loop:
 	}
 }
 
+func getRequest(url string) *http.Request {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Authorization", os.Getenv("API_TOKEN"))
+	return req
+}
+
 func getStats() {
 	var teamName string
 	fmt.Scan(&teamName)
+	id := teamId[teamName]
 
 	req, err := http.NewRequest(http.MethodGet, os.Getenv("API_HOST")+"/matches", nil)
 	if err != nil {
@@ -127,4 +155,30 @@ func getStats() {
 	if err != nil {
 		panic(err)
 	}
+
+	wins := 0
+	defeats := 0
+	scored := 0
+	missed := 0
+	for _, m := range matches {
+		if m.Team1Id != id && m.Team2Id != id {
+			continue
+		}
+
+		if id == m.Team1Id && m.Team1Score > m.Team2Score || id == m.Team2Id && m.Team2Score > m.Team1Score {
+			wins++
+		} else if id == m.Team1Id && m.Team1Score < m.Team2Score || id == m.Team2Id && m.Team2Score < m.Team1Score {
+			defeats++
+		}
+
+		if id == m.Team1Id {
+			scored += m.Team1Score
+			missed += m.Team2Score
+		} else {
+			scored += m.Team2Score
+			missed += m.Team1Score
+		}
+	}
+
+	fmt.Println(wins, defeats, scored-missed)
 }
