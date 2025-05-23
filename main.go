@@ -44,7 +44,6 @@ func main() {
 	}
 
 	var p player
-	players := []player{}
 	playerNames := []string{}
 	id := 1
 
@@ -75,7 +74,6 @@ loop:
 			panic(err)
 		}
 
-		players = append(players, p)
 		playerNames = append(playerNames, p.Name+" "+p.Surname)
 
 		res.Body.Close()
