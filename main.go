@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -121,8 +122,13 @@ loop:
 }
 
 func getStats() {
-	var teamName string
-	fmt.Scan(&teamName)
+	in := bufio.NewReader(os.Stdin)
+
+	teamName, err := in.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
+	teamName = teamName[1 : len(teamName)-3]
 	id := teamId[teamName]
 
 	req := getRequest(os.Getenv("API_HOST") + "/matches")
