@@ -1,42 +1,11 @@
-package main
+package general
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
-	"io"
-	"os"
 )
 
-func getStats() {
-	in := bufio.NewReader(os.Stdin)
-
-	teamName, err := in.ReadString('\n')
-	if err != nil {
-		panic(err)
-	}
-	teamName = teamName[1 : len(teamName)-3]
+func GetStats(teamName string, teamId map[string]int, matches []Match) {
 	id := teamId[teamName]
-
-	req := getRequest(os.Getenv("API_HOST") + "/matches")
-
-	res, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	var matches []match
-	err = json.Unmarshal(b, &matches)
-	if err != nil {
-		fmt.Println(string(b))
-		panic(err)
-	}
 
 	wins := 0
 	defeats := 0

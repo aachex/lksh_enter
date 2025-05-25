@@ -1,4 +1,4 @@
-package main
+package general
 
 import (
 	"encoding/json"
@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func mustFetch[T any](url string) T {
-	req := getRequest(url)
+func MustFetch[T any](url string, client *http.Client) T {
+	req := GetRequest(url)
 	res, err := client.Do(req)
 	if err != nil {
 		panic(err)
@@ -29,7 +29,7 @@ func mustFetch[T any](url string) T {
 	return result
 }
 
-func getRequest(url string) *http.Request {
+func GetRequest(url string) *http.Request {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		panic(err)
