@@ -48,12 +48,13 @@ func main() {
 				panic(err)
 			}
 			teamName = teamName[1 : len(teamName)-3] // убиаем кавычки
-			general.GetStats(teamName, teamId, matches)
+			wins, defeats, diff := general.GetStats(teamId[teamName], matches)
+			fmt.Println(wins, defeats, diff)
 
 		case "versus?":
 			var id1, id2 int
 			fmt.Scan(&id1, &id2)
-			general.Versus(id1, id2, teams, matches)
+			fmt.Println(general.Versus(id1, id2, teams, matches))
 		}
 	}
 }

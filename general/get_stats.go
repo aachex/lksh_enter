@@ -1,12 +1,6 @@
 package general
 
-import (
-	"fmt"
-)
-
-func GetStats(teamName string, teamId map[string]int, matches []Match) {
-	id := teamId[teamName]
-
+func GetStats(id int, matches []Match) (int, int, int) {
 	wins := 0
 	defeats := 0
 	scored := 0
@@ -31,5 +25,5 @@ func GetStats(teamName string, teamId map[string]int, matches []Match) {
 		}
 	}
 
-	fmt.Println(wins, defeats, scored-missed)
+	return wins, defeats, scored - missed
 }
