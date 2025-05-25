@@ -20,3 +20,10 @@ type Match struct {
 	Team1Score int `json:"team1_score"`
 	Team2Score int `json:"team2_score"`
 }
+
+type Goal struct {
+	Id       int `json:"id"`
+	PlayerId int `json:"player"`
+	MatchId  int `json:"match"`
+	Minute   int `json:"minute"`
+}

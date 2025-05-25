@@ -1,23 +1,8 @@
 package general
 
-import (
-	"slices"
-)
-
-func Versus(id1, id2 int, teams []Team, matches []Match) (cnt int) {
-	teamId1 := 0
-	teamId2 := 0
-	for _, t := range teams {
-		if slices.Contains(t.Players, id1) {
-			teamId1 = t.Id
-		}
-		if slices.Contains(t.Players, id2) {
-			teamId2 = t.Id
-		}
-	}
-
+func Versus(team1Id, team2Id int, teams []Team, matches []Match) (cnt int) {
 	for _, m := range matches {
-		if m.Team1Id == teamId1 && m.Team2Id == teamId2 || m.Team1Id == teamId2 && m.Team2Id == teamId1 {
+		if m.Team1Id == team1Id && m.Team2Id == team2Id || m.Team1Id == team2Id && m.Team2Id == team1Id {
 			cnt++
 		}
 	}

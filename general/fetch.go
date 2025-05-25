@@ -2,6 +2,7 @@ package general
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -23,6 +24,7 @@ func MustFetch[T any](url string, client *http.Client) T {
 
 	err = json.Unmarshal(b, &result)
 	if err != nil {
+		fmt.Println(string(b))
 		panic(err)
 	}
 

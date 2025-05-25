@@ -29,9 +29,13 @@ func main() {
 
 	// fetch teams
 	teams := general.MustFetch[[]general.Team](os.Getenv("API_HOST")+"/teams", &client)
-	teamId := make(map[string]int)
+	teamId := make(map[string]int)  // get team id by name
+	playerTeam := make(map[int]int) // get team id by player id
 	for _, t := range teams {
 		teamId[t.Name] = t.Id
+		for _, playerId := range t.Players {
+			playerTeam[playerId] = t.Id
+		}
 	}
 
 	// fetch matches
@@ -54,7 +58,7 @@ func main() {
 		case "versus?":
 			var id1, id2 int
 			fmt.Scan(&id1, &id2)
-			fmt.Println(general.Versus(id1, id2, teams, matches))
+			fmt.Println(general.Versus(playerTeam[id1], playerTeam[id2], teams, matches))
 		}
 	}
 }
