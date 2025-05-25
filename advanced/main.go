@@ -19,6 +19,7 @@ func main() {
 
 	// fetch teams
 	teams := general.MustFetch[[]general.Team](os.Getenv("API_HOST")+"/teams", &client)
+
 	teamId := make(map[string]int)  // get team id by name
 	playerTeam := make(map[int]int) // get team id by player id
 	for _, t := range teams {

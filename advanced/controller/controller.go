@@ -13,8 +13,8 @@ import (
 
 type Controller struct {
 	Matches    []general.Match
-	TeamId     map[string]int
-	PlayerTeam map[int]int
+	TeamId     map[string]int // Get team.Id by team.Name
+	PlayerTeam map[int]int    // Get team.Id by player.Id
 	Teams      []general.Team
 	Client     http.Client
 }
