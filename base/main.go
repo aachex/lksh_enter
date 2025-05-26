@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("../.env")
+	err := godotenv.Load()
 	if err != nil {
 		panic(err)
 	}
@@ -52,8 +52,8 @@ func main() {
 				panic(err)
 			}
 			teamName = teamName[1 : len(teamName)-3] // убиаем кавычки
-			wins, defeats, diff := general.GetStats(teamId[teamName], matches)
-			fmt.Println(wins, defeats, diff)
+			wins, defeats, scored, missed := general.GetStats(teamId[teamName], matches)
+			fmt.Println(wins, defeats, scored-missed)
 
 		case "versus?":
 			var id1, id2 int

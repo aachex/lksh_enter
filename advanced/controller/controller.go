@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"strconv"
@@ -21,6 +22,7 @@ type Controller struct {
 
 func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
 	mux.HandleFunc("GET /stats", c.GetStats)
+	mux.HandleFunc("GET /front/stats", c.GetStatsHtml)
 	mux.HandleFunc("GET /versus", c.GetVersus)
 	mux.HandleFunc("GET /goals", c.GetGoals)
 }
@@ -28,8 +30,35 @@ func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
 func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
 	teamId := c.TeamId[teamName]
-	wins, defeats, diff := general.GetStats(teamId, c.Matches)
-	w.Write(fmt.Appendf(nil, "%d %d %d", wins, defeats, diff))
+	wins, defeats, scored, missed := general.GetStats(teamId, c.Matches)
+	w.Write(fmt.Appendf(nil, "%d %d %d", wins, defeats, scored-missed))
+}
+
+func (c *Controller) GetStatsHtml(w http.ResponseWriter, r *http.Request) {
+	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
+	teamId := c.TeamId[teamName]
+	wins, defeats, scored, missed := general.GetStats(teamId, c.Matches)
+
+	tmpl, err := template.New("stats.html").ParseFiles("advanced/html/stats.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type res struct {
+		TeamName string
+		Wins     int
+		Defeats  int
+		Scored   int
+		Missed   int
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	err = tmpl.Execute(w, res{teamName, wins, defeats, scored, missed})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (c *Controller) GetVersus(w http.ResponseWriter, r *http.Request) {

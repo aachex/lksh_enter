@@ -1,6 +1,6 @@
 package general
 
-func GetStats(teamId int, matches []Match) (int, int, int) {
+func GetStats(teamId int, matches []Match) (int, int, int, int) {
 	wins := 0
 	defeats := 0
 	scored := 0
@@ -25,5 +25,5 @@ func GetStats(teamId int, matches []Match) (int, int, int) {
 		}
 	}
 
-	return wins, defeats, scored - missed
+	return wins, defeats, scored, missed
 }

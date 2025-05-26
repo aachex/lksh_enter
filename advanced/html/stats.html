@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats</title>
+</head>
+<body style="color: #DE20FF; background-color: #262626; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <div class="header" style="text-align: center; color: #199ae5;">
+        <p style="font-size: 20px;">Статистика команды</p>
+        <h1 style="font-size: 50px;">{{.TeamName}}</h1>
+    </div>
+    <hr style="width: 90%; margin-bottom: 50px;">
+    <div class="stats" style="display: flex; flex-wrap: wrap; gap: 100px; text-align: center; font-size: 30px;">
+        <div class="stat-block">
+            {{.Wins}} <br>
+            побед
+        </div>
+        <div class="stat-block">
+            {{.Scored}} <br>
+            голов забито
+        </div>
+        <div style="color: #ff5020;" class="stat-block">
+            {{.Defeats}} <br>
+            поражений
+        </div>
+        <div style="color: #ff5020;" class="stat-block">
+            {{.Missed}} <br>
+            голов пропущено
+        </div>
+    </div>
+</body>
+</html>
