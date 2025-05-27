@@ -13,9 +13,7 @@ import (
 )
 
 type Controller struct {
-	TeamId     map[string]int // Get team.Id by team.Name
-	PlayerTeam map[int]int    // Get team.Id by player.Id
-	Client     general.Client
+	Client general.Client
 }
 
 func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
@@ -27,14 +25,15 @@ func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
 
 func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
-	teamId := c.TeamId[teamName]
+	teamId := c.Client.TeamId(teamName)
 	wins, defeats, scored, missed := c.Client.GetStats(teamId)
 	w.Write(fmt.Appendf(nil, "%d %d %d", wins, defeats, scored-missed))
 }
 
 func (c *Controller) GetStatsHtml(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
-	teamId := c.TeamId[teamName]
+	teamId := c.Client.TeamId(teamName)
+
 	wins, defeats, scored, missed := c.Client.GetStats(teamId)
 
 	tmpl, err := template.New("stats.html").ParseFiles("advanced/html/stats.html")
@@ -83,7 +82,7 @@ func (c *Controller) GetGoals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamId := c.PlayerTeam[playerId]
+	teamId := c.Client.GetPlayerTeam(playerId)
 
 	type response struct {
 		MatchId int `json:"match"`

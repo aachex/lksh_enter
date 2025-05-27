@@ -64,7 +64,7 @@ func (c *Client) PlayerNamesSorted() ([]string, error) {
 
 loop:
 	for {
-		req := GetRequest(os.Getenv("API_HOST") + fmt.Sprintf("/players/%d", id))
+		req := getRequest(os.Getenv("API_HOST") + fmt.Sprintf("/players/%d", id))
 
 		res, err := c.Do(req)
 		if err != nil {
@@ -100,7 +100,7 @@ loop:
 }
 
 func (c *Client) MustFetch(url string, obj any) {
-	req := GetRequest(url)
+	req := getRequest(url)
 	res, err := c.Do(req)
 	if err != nil {
 		panic(err)
@@ -119,7 +119,30 @@ func (c *Client) MustFetch(url string, obj any) {
 	}
 }
 
-func GetRequest(url string) *http.Request {
+// GetPlayerTeam returns team.Id where team.Players contains given playerId.
+func (c *Client) GetPlayerTeam(playerId int) int {
+	var teams []Team
+	c.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
+	for _, t := range teams {
+		if slices.Contains(t.Players, playerId) {
+			return t.Id
+		}
+	}
+	return -1 // undefined player
+}
+
+func (c *Client) TeamId(teamName string) int {
+	var teams []Team
+	c.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
+	for _, t := range teams {
+		if t.Name == teamName {
+			return t.Id
+		}
+	}
+	return -1 // undefined team
+}
+
+func getRequest(url string) *http.Request {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		panic(err)
