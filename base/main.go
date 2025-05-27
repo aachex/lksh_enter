@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/aachex/lksh_enter/general"
@@ -16,10 +15,10 @@ func main() {
 		panic(err)
 	}
 
-	client := http.Client{}
+	client := general.Client{}
 
 	// print players
-	players, err := general.PlayerNamesSorted(&client)
+	players, err := client.PlayerNamesSorted()
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +27,8 @@ func main() {
 	}
 
 	// fetch teams
-	teams := general.MustFetch[[]general.Team](os.Getenv("API_HOST")+"/teams", &client)
+	var teams []general.Team
+	client.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
 	teamId := make(map[string]int)  // get team id by name
 	playerTeam := make(map[int]int) // get team id by player id
 	for _, t := range teams {
@@ -37,9 +37,6 @@ func main() {
 			playerTeam[playerId] = t.Id
 		}
 	}
-
-	// fetch matches
-	matches := general.MustFetch[[]general.Match](os.Getenv("API_HOST")+"/matches", &client)
 
 	var s string
 	in := bufio.NewReader(os.Stdin)
@@ -52,13 +49,13 @@ func main() {
 				panic(err)
 			}
 			teamName = teamName[1 : len(teamName)-3] // убиаем кавычки
-			wins, defeats, scored, missed := general.GetStats(teamId[teamName], matches)
+			wins, defeats, scored, missed := client.GetStats(teamId[teamName])
 			fmt.Println(wins, defeats, scored-missed)
 
 		case "versus?":
 			var id1, id2 int
 			fmt.Scan(&id1, &id2)
-			fmt.Println(general.Versus(playerTeam[id1], playerTeam[id2], teams, matches))
+			fmt.Println(client.Versus(playerTeam[id1], playerTeam[id2]))
 		}
 	}
 }

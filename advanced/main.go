@@ -15,10 +15,11 @@ func main() {
 		panic(err)
 	}
 
-	client := http.Client{}
+	client := general.Client{}
 
 	// fetch teams
-	teams := general.MustFetch[[]general.Team](os.Getenv("API_HOST")+"/teams", &client)
+	var teams []general.Team
+	client.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
 
 	teamId := make(map[string]int)  // get team id by name
 	playerTeam := make(map[int]int) // get team id by player id
@@ -30,15 +31,12 @@ func main() {
 	}
 
 	// fetch matches
-	matches := general.MustFetch[[]general.Match](os.Getenv("API_HOST")+"/matches", &client)
 
 	mux := http.NewServeMux()
 
 	controller := controller.Controller{
-		Teams:      teams,
 		TeamId:     teamId,
 		PlayerTeam: playerTeam,
-		Matches:    matches,
 		Client:     client,
 	}
 

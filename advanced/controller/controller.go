@@ -13,11 +13,9 @@ import (
 )
 
 type Controller struct {
-	Matches    []general.Match
 	TeamId     map[string]int // Get team.Id by team.Name
 	PlayerTeam map[int]int    // Get team.Id by player.Id
-	Teams      []general.Team
-	Client     http.Client
+	Client     general.Client
 }
 
 func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
@@ -30,14 +28,14 @@ func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
 func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
 	teamId := c.TeamId[teamName]
-	wins, defeats, scored, missed := general.GetStats(teamId, c.Matches)
+	wins, defeats, scored, missed := c.Client.GetStats(teamId)
 	w.Write(fmt.Appendf(nil, "%d %d %d", wins, defeats, scored-missed))
 }
 
 func (c *Controller) GetStatsHtml(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
 	teamId := c.TeamId[teamName]
-	wins, defeats, scored, missed := general.GetStats(teamId, c.Matches)
+	wins, defeats, scored, missed := c.Client.GetStats(teamId)
 
 	tmpl, err := template.New("stats.html").ParseFiles("advanced/html/stats.html")
 	if err != nil {
@@ -74,7 +72,7 @@ func (c *Controller) GetVersus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gamesCnt := general.Versus(id1, id2, c.Teams, c.Matches)
+	gamesCnt := c.Client.Versus(id1, id2)
 	w.Write(fmt.Appendf(nil, "%d", gamesCnt))
 }
 
@@ -93,12 +91,15 @@ func (c *Controller) GetGoals(w http.ResponseWriter, r *http.Request) {
 	}
 	result := []response{}
 
-	for _, m := range c.Matches {
+	var matches []general.Match
+	c.Client.MustFetch(os.Getenv("API_HOST")+"/matches", &matches)
+	for _, m := range matches {
 		if m.Team1Id != teamId && m.Team2Id != teamId {
 			continue
 		}
 
-		goals := general.MustFetch[[]general.Goal](os.Getenv("API_HOST")+fmt.Sprintf("/goals?match_id=%d", m.Id), &c.Client)
+		var goals []general.Goal
+		c.Client.MustFetch(os.Getenv("API_HOST")+fmt.Sprintf("/goals?match_id=%d", m.Id), &goals)
 		for _, g := range goals {
 			if g.PlayerId == playerId {
 				result = append(result, response{m.Id, g.Minute})
