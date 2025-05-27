@@ -20,6 +20,7 @@ func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
 	mux.HandleFunc("GET /stats", c.GetStats)
 	mux.HandleFunc("GET /front/stats", c.GetStatsHtml)
 	mux.HandleFunc("GET /versus", c.GetVersus)
+	mux.HandleFunc("GET /front/versus", c.GetVersusHtml)
 	mux.HandleFunc("GET /goals", c.GetGoals)
 }
 
@@ -33,7 +34,6 @@ func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) GetStatsHtml(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
 	teamId := c.Client.TeamId(teamName)
-
 	wins, defeats, scored, missed := c.Client.GetStats(teamId)
 
 	tmpl, err := template.New("stats.html").ParseFiles("advanced/html/stats.html")
@@ -75,6 +75,57 @@ func (c *Controller) GetVersus(w http.ResponseWriter, r *http.Request) {
 	w.Write(fmt.Appendf(nil, "%d", gamesCnt))
 }
 
+func (c *Controller) GetVersusHtml(w http.ResponseWriter, r *http.Request) {
+	id1, err := strconv.Atoi(r.URL.Query().Get("player1_id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id2, err := strconv.Atoi(r.URL.Query().Get("player2_id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	player1 := c.Client.Player(id1)
+	player2 := c.Client.Player(id2)
+
+	tmpl, err := template.New("versus.html").ParseFiles("advanced/html/versus.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type res struct {
+		// player1 info
+		Name1 string
+		Team1 string
+
+		// player2 info
+		Name2 string
+		Team2 string
+
+		VersusCnt int
+	}
+
+	team1Id := c.Client.PlayerTeam(id1)
+	team2Id := c.Client.PlayerTeam(id2)
+	err = tmpl.Execute(w,
+		res{
+			player1.Name + " " + player1.Surname,
+			c.Client.Team(team1Id).Name,
+			player2.Name + " " + player2.Surname,
+			c.Client.Team(team2Id).Name,
+			c.Client.Versus(team1Id, team2Id),
+		})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (c *Controller) GetGoals(w http.ResponseWriter, r *http.Request) {
 	playerId, err := strconv.Atoi(r.URL.Query().Get("player_id"))
 	if err != nil {
@@ -82,7 +133,7 @@ func (c *Controller) GetGoals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamId := c.Client.GetPlayerTeam(playerId)
+	teamId := c.Client.PlayerTeam(playerId)
 
 	type response struct {
 		MatchId int `json:"match"`

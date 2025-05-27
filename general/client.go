@@ -114,13 +114,25 @@ func (c *Client) MustFetch(url string, obj any) {
 
 	err = json.Unmarshal(b, obj)
 	if err != nil {
-		fmt.Println(string(b))
 		panic(err)
 	}
 }
 
-// GetPlayerTeam returns team.Id where team.Players contains given playerId.
-func (c *Client) GetPlayerTeam(playerId int) int {
+// Player returns player with given id.
+func (c *Client) Player(id int) Player {
+	var p Player
+	c.MustFetch(os.Getenv("API_HOST")+fmt.Sprintf("/players/%d", id), &p)
+	return p
+}
+
+func (c *Client) Team(id int) Team {
+	var t Team
+	c.MustFetch(os.Getenv("API_HOST")+fmt.Sprintf("/teams/%d", id), &t)
+	return t
+}
+
+// PlayerTeam returns team.Id where team.Players contains given playerId.
+func (c *Client) PlayerTeam(playerId int) int {
 	var teams []Team
 	c.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
 	for _, t := range teams {

@@ -26,18 +26,6 @@ func main() {
 		fmt.Println(p)
 	}
 
-	// fetch teams
-	var teams []general.Team
-	client.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
-	teamId := make(map[string]int)  // get team id by name
-	playerTeam := make(map[int]int) // get team id by player id
-	for _, t := range teams {
-		teamId[t.Name] = t.Id
-		for _, playerId := range t.Players {
-			playerTeam[playerId] = t.Id
-		}
-	}
-
 	var s string
 	in := bufio.NewReader(os.Stdin)
 	for {
@@ -49,13 +37,13 @@ func main() {
 				panic(err)
 			}
 			teamName = teamName[1 : len(teamName)-3] // убиаем кавычки
-			wins, defeats, scored, missed := client.GetStats(teamId[teamName])
+			wins, defeats, scored, missed := client.GetStats(client.TeamId(teamName))
 			fmt.Println(wins, defeats, scored-missed)
 
 		case "versus?":
 			var id1, id2 int
 			fmt.Scan(&id1, &id2)
-			fmt.Println(client.Versus(playerTeam[id1], playerTeam[id2]))
+			fmt.Println(client.Versus(client.PlayerTeam(id1), client.PlayerTeam(id2)))
 		}
 	}
 }

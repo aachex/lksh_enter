@@ -17,15 +17,6 @@ func main() {
 
 	client := general.Client{}
 
-	// fetch teams
-	var teams []general.Team
-	client.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
-
-	teamId := make(map[string]int) // get team id by name
-	for _, t := range teams {
-		teamId[t.Name] = t.Id
-	}
-
 	mux := http.NewServeMux()
 
 	controller := controller.Controller{

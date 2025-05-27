@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats</title>
+</head>
+<body style="color: #DE20FF; background-color: #262626; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <div class="header" style="text-align: center; color: #109ff1;">
+        <h1 style="font-size: 35px;">Игроки</h1>
+    </div>
+    <hr style="width: 90%; margin-bottom: 50px;">
+    <p style="font-size: 35px; margin-top: 0; color: #8142ff;">Количество игр: {{.VersusCnt}}</p>
+    <div class="info" style="display: flex; gap: 250px; text-align: center;">
+        <div class="playerInfo">
+            <p style="font-size: 30px;">{{.Name1}}</p>
+            <p style="color: #209EFF; font-size: 20px;">{{.Team1}}</p>
+        </div>
+        <div class="playerInfo">
+            <p style="font-size: 30px;">{{.Name2}}</p>
+            <p style="color: #209EFF; font-size: 20px;">{{.Team2}}</p>
+        </div>
+    </div>
+</body>
+</html>
