@@ -4,37 +4,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/aachex/lksh_enter/advanced/logging"
 	"github.com/aachex/lksh_enter/general"
 )
 
 type Controller struct {
-	Client general.Client
+	client general.Client
+	logger *slog.Logger
+}
+
+func New(client general.Client, logger *slog.Logger) *Controller {
+	return &Controller{
+		client: client,
+		logger: logger,
+	}
 }
 
 func (c *Controller) RegisterEndpoints(mux *http.ServeMux) {
-	mux.HandleFunc("GET /stats", c.GetStats)
-	mux.HandleFunc("GET /front/stats", c.GetStatsHtml)
-	mux.HandleFunc("GET /versus", c.GetVersus)
-	mux.HandleFunc("GET /front/versus", c.GetVersusHtml)
-	mux.HandleFunc("GET /goals", c.GetGoals)
+	mux.HandleFunc("GET /stats", logging.Middleware(c.GetStats, c.logger))
+	mux.HandleFunc("GET /front/stats", logging.Middleware(c.GetStatsHtml, c.logger))
+	mux.HandleFunc("GET /versus", logging.Middleware(c.GetVersus, c.logger))
+	mux.HandleFunc("GET /front/versus", logging.Middleware(c.GetVersusHtml, c.logger))
+	mux.HandleFunc("GET /goals", logging.Middleware(c.GetGoals, c.logger))
 }
 
 func (c *Controller) GetStats(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
-	teamId := c.Client.TeamId(teamName)
-	wins, defeats, scored, missed := c.Client.GetStats(teamId)
+	teamId := c.client.TeamId(teamName)
+	wins, defeats, scored, missed := c.client.GetStats(teamId)
 	w.Write(fmt.Appendf(nil, "%d %d %d", wins, defeats, scored-missed))
 }
 
 func (c *Controller) GetStatsHtml(w http.ResponseWriter, r *http.Request) {
 	teamName := strings.Trim(r.URL.Query().Get("team_name"), "\"")
-	teamId := c.Client.TeamId(teamName)
-	wins, defeats, scored, missed := c.Client.GetStats(teamId)
+	teamId := c.client.TeamId(teamName)
+	wins, defeats, scored, missed := c.client.GetStats(teamId)
 
 	tmpl, err := template.New("stats.html").ParseFiles("advanced/html/stats.html")
 	if err != nil {
@@ -71,7 +81,7 @@ func (c *Controller) GetVersus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gamesCnt := c.Client.Versus(id1, id2)
+	gamesCnt := c.client.Versus(id1, id2)
 	w.Write(fmt.Appendf(nil, "%d", gamesCnt))
 }
 
@@ -88,8 +98,8 @@ func (c *Controller) GetVersusHtml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	player1 := c.Client.Player(id1)
-	player2 := c.Client.Player(id2)
+	player1 := c.client.Player(id1)
+	player2 := c.client.Player(id2)
 
 	tmpl, err := template.New("versus.html").ParseFiles("advanced/html/versus.html")
 	if err != nil {
@@ -109,15 +119,15 @@ func (c *Controller) GetVersusHtml(w http.ResponseWriter, r *http.Request) {
 		VersusCnt int
 	}
 
-	team1Id := c.Client.PlayerTeam(id1)
-	team2Id := c.Client.PlayerTeam(id2)
+	team1Id := c.client.PlayerTeam(id1)
+	team2Id := c.client.PlayerTeam(id2)
 	err = tmpl.Execute(w,
 		res{
 			player1.Name + " " + player1.Surname,
-			c.Client.Team(team1Id).Name,
+			c.client.Team(team1Id).Name,
 			player2.Name + " " + player2.Surname,
-			c.Client.Team(team2Id).Name,
-			c.Client.Versus(team1Id, team2Id),
+			c.client.Team(team2Id).Name,
+			c.client.Versus(team1Id, team2Id),
 		})
 
 	if err != nil {
@@ -133,7 +143,7 @@ func (c *Controller) GetGoals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamId := c.Client.PlayerTeam(playerId)
+	teamId := c.client.PlayerTeam(playerId)
 
 	type response struct {
 		MatchId int `json:"match"`
@@ -142,14 +152,14 @@ func (c *Controller) GetGoals(w http.ResponseWriter, r *http.Request) {
 	result := []response{}
 
 	var matches []general.Match
-	c.Client.MustFetch(os.Getenv("API_HOST")+"/matches", &matches)
+	c.client.MustFetch(os.Getenv("API_HOST")+"/matches", &matches)
 	for _, m := range matches {
 		if m.Team1Id != teamId && m.Team2Id != teamId {
 			continue
 		}
 
 		var goals []general.Goal
-		c.Client.MustFetch(os.Getenv("API_HOST")+fmt.Sprintf("/goals?match_id=%d", m.Id), &goals)
+		c.client.MustFetch(os.Getenv("API_HOST")+fmt.Sprintf("/goals?match_id=%d", m.Id), &goals)
 		for _, g := range goals {
 			if g.PlayerId == playerId {
 				result = append(result, response{m.Id, g.Minute})

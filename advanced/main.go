@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -17,12 +19,14 @@ func main() {
 
 	client := general.Client{}
 
+	logOpts := slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &logOpts))
+
 	mux := http.NewServeMux()
 
-	controller := controller.Controller{
-		Client: client,
-	}
-
+	controller := controller.New(client, logger)
 	controller.RegisterEndpoints(mux)
 
 	srv := http.Server{
@@ -30,5 +34,6 @@ func main() {
 		Addr:    ":" + os.Getenv("SRV_PORT"),
 	}
 
+	logger.Info(fmt.Sprintf("listening: %s", os.Getenv("SRV_PORT")))
 	srv.ListenAndServe()
 }
