@@ -64,58 +64,22 @@ func (c *Client) PlayerNamesSorted() ([]string, error) {
 
 loop:
 	for {
-		req := getRequest(os.Getenv("API_HOST") + fmt.Sprintf("/players/%d", id))
+		statusCode := c.MustFetch(os.Getenv("API_HOST")+fmt.Sprintf("/players/%d", id), &p)
 
-		res, err := c.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		switch res.StatusCode {
+		switch statusCode {
 		case http.StatusTooManyRequests:
-			res.Body.Close()
 			time.Sleep(time.Minute) // слишком много запросов - временно прерываем цикл (ну почему нет эндпоинта на получение всех игроков?)
 			continue
 		case http.StatusNotFound:
 			break loop
 		}
 
-		b, err := io.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal(b, &p)
-		if err != nil {
-			return nil, err
-		}
-
 		playerNames = append(playerNames, p.Name+" "+p.Surname)
-
-		res.Body.Close()
 		id++
 	}
 
 	slices.Sort(playerNames)
 	return playerNames, nil
-}
-
-func (c *Client) MustFetch(url string, obj any) {
-	req := getRequest(url)
-	res, err := c.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	err = json.Unmarshal(b, obj)
-	if err != nil {
-		panic(err)
-	}
 }
 
 // Player returns player with given id.
@@ -143,6 +107,7 @@ func (c *Client) PlayerTeam(playerId int) int {
 	return -1 // undefined player
 }
 
+// TeamId returns team.Id where team.Name equals given teamName.
 func (c *Client) TeamId(teamName string) int {
 	var teams []Team
 	c.MustFetch(os.Getenv("API_HOST")+"/teams", &teams)
@@ -154,11 +119,33 @@ func (c *Client) TeamId(teamName string) int {
 	return -1 // undefined team
 }
 
-func getRequest(url string) *http.Request {
+// MustFetch requests data from given url and parses response body to obj. Obj must be a pointer.
+// It returns the status code of a response.
+func (c *Client) MustFetch(url string, obj any) int {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Set("Authorization", os.Getenv("API_TOKEN"))
-	return req
+
+	res, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return res.StatusCode
+	}
+
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(b, obj)
+	if err != nil {
+		panic(err)
+	}
+	return http.StatusOK
 }
