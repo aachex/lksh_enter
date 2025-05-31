@@ -17,8 +17,6 @@ func main() {
 		panic(err)
 	}
 
-	client := general.Client{}
-
 	logOpts := slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}
@@ -26,6 +24,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	client := general.Client{}
 	controller := controller.New(client, logger)
 	controller.RegisterEndpoints(mux)
 

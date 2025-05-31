@@ -17,7 +17,7 @@ func main() {
 
 	client := general.Client{}
 
-	// print players
+	// вывод игроков
 	players, err := client.PlayerNamesSorted()
 	if err != nil {
 		panic(err)
@@ -36,7 +36,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			teamName = teamName[1 : len(teamName)-3] // убиаем кавычки
+			teamName = teamName[1 : len(teamName)-3] // убираем кавычки
 			wins, defeats, scored, missed := client.GetStats(client.TeamId(teamName))
 			fmt.Println(wins, defeats, scored-missed)
 
